@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bảng điều khiển nhân viên</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f4f6f9;
+        }
+        .sidebar {
+            width: 280px;
+            background-color: #374151;
+        }
+        .nav-link {
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        .nav-link.active {
+            background-color: #1f2937;
+            border-left: 4px solid #3b82f6;
+            color: white;
+        }
+        .status-badge {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 9999px;
+            font-weight: 500;
+        }
+        /* Style cho các thẻ thống kê có thể nhấp vào */
+        .dashboard-card {
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .dashboard-card:hover {
+            transform: translateY(-4px);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="flex h-screen bg-gray-100">
+        <!-- Sidebar -->
+        <div class="sidebar text-gray-300 p-4 flex flex-col items-center">
+            <div class="text-white text-2xl font-bold mb-8 mt-2">
+                Quản lý Sách
+            </div>
+            <nav class="w-full">
+                <a id="dashboard-link" class="nav-link flex items-center p-3 my-2 rounded-lg text-gray-400 hover:text-white hover:bg-gray-700 active" data-target="dashboard-section">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="3" width="7" height="9"></rect>
+                        <rect x="14" y="3" width="7" height="5"></rect>
+                        <rect x="14" y="12" width="7" height="9"></rect>
+                        <rect x="3" y="16" width="7" height="5"></rect>
+                    </svg>
+                    Bảng điều khiển
+                </a>
+                <a id="orders-link" class="nav-link flex items-center p-3 my-2 rounded-lg text-gray-400 hover:text-white hover:bg-gray-700" data-target="orders-section">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+                        <rect x="8" y="2" width="8" height="2" rx="1" ry="1"></rect>
+                    </svg>
+                    Quản lý Đơn hàng
+                </a>
+                <!-- Thêm menu mới cho đơn hàng hủy và trả hàng -->
+                <a id="canceled-returned-link" class="nav-link flex items-center p-3 my-2 rounded-lg text-gray-400 hover:text-white hover:bg-gray-700" data-target="canceled-returned-orders-section">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M18 6L6 18M6 6l12 12"></path>
+                    </svg>
+                    Đã hủy & Yêu cầu trả hàng
+                </a>
+                <a id="books-link" class="nav-link flex items-center p-3 my-2 rounded-lg text-gray-400 hover:text-white hover:bg-gray-700" data-target="books-section">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                        <path d="M6.5 2H20v20h-4.5a2.5 2.5 0 0 1-2.5-2.5v-10A2.5 2.5 0 0 0 10 8h2.5a2.5 2.5 0 0 1 2.5 2.5v10"></path>
+                    </svg>
+                    Quản lý Sách
+                </a>
+                <a id="reviews-link" class="nav-link flex items-center p-3 my-2 rounded-lg text-gray-400 hover:text-white hover:bg-gray-700" data-target="reviews-section">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                    </svg>
+                    Quản lý Đánh giá
+                </a>
+                <a id="sales-link" class="nav-link flex items-center p-3 my-2 rounded-lg text-gray-400 hover:text-white hover:bg-gray-700" data-target="sales-section">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 3v18h18"></path>
+                        <path d="M18 17l-3.5-3.5a1.5 1.5 0 0 0-2 0L5 17"></path>
+                        <path d="M15 15l2-2"></path>
+                    </svg>
+                    Thống kê Doanh thu
+                </a>
+            </nav>
+        </div>
+
+        <!-- Main Content -->
+        <div class="flex-1 p-6 overflow-y-auto">
+            <h1 class="text-3xl font-bold text-gray-800 mb-6">Bảng điều khiển</h1>
+
+            <!-- Dashboard Section -->
+            <div id="dashboard-section" class="main-section">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <!-- Thẻ có thể nhấp vào để điều hướng đến trang Quản lý Đơn hàng -->
+                    <div class="bg-white rounded-xl shadow-sm p-5 text-center dashboard-card" onclick="setActiveSectionAndLink('orders-section')">
+                        <h2 class="text-gray-500 font-medium text-sm">Đơn hàng mới</h2>
+                        <p class="text-2xl font-bold text-blue-600 mt-2">15</p>
+                    </div>
+                    <!-- Thẻ có thể nhấp vào để điều hướng đến trang Quản lý Đơn hàng -->
+                    <div class="bg-white rounded-xl shadow-sm p-5 text-center dashboard-card" onclick="setActiveSectionAndLink('orders-section')">
+                        <h2 class="text-gray-500 font-medium text-sm">Đang giao</h2>
+                        <p class="text-2xl font-bold text-yellow-600 mt-2">5</p>
+                    </div>
+                    <!-- Thẻ có thể nhấp vào để điều hướng đến trang Quản lý Sách -->
+                    <div class="bg-white rounded-xl shadow-sm p-5 text-center dashboard-card" onclick="setActiveSectionAndLink('books-section')">
+                        <h2 class="text-gray-500 font-medium text-sm">Sách hết hàng</h2>
+                        <p class="text-2xl font-bold text-red-600 mt-2">3</p>
+                    </div>
+                    <!-- Thẻ có thể nhấp vào để điều hướng đến trang Thống kê Doanh thu -->
+                    <div class="bg-white rounded-xl shadow-sm p-5 text-center dashboard-card" onclick="setActiveSectionAndLink('sales-section')">
+                        <h2 class="text-gray-500 font-medium text-sm">Tổng doanh thu hôm nay</h2>
+                        <p class="text-2xl font-bold text-green-600 mt-2">5.200.000đ</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Orders Section -->
+            <div id="orders-section" class="main-section hidden">
+                <div class="bg-white rounded-xl shadow-sm p-6">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-4">Quản lý Đơn hàng</h2>
+                    <table class="w-full text-left table-auto border-collapse">
+                        <thead>
+                            <tr class="bg-gray-50 text-gray-600 uppercase text-sm leading-normal">
+                                <th class="py-3 px-4">Mã Đơn hàng</th>
+                                <th class="py-3 px-4">Khách hàng</th>
+                                <th class="py-3 px-4">Ngày đặt</th>
+                                <th class="py-3 px-4">Trạng thái</th>
+                                <th class="py-3 px-4">Tổng tiền</th>
+                                <th class="py-3 px-4 text-center">Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody id="orders-table-body" class="text-gray-600 text-sm font-light">
+                            <!-- Dữ liệu đơn hàng sẽ được thêm vào đây bằng JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- New Canceled & Returned Orders Section -->
+            <div id="canceled-returned-orders-section" class="main-section hidden">
+                <div class="bg-white rounded-xl shadow-sm p-6">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-4">Đơn hàng đã hủy & Yêu cầu trả hàng</h2>
+                    <table class="w-full text-left table-auto border-collapse">
+                        <thead>
+                            <tr class="bg-gray-50 text-gray-600 uppercase text-sm leading-normal">
+                                <th class="py-3 px-4">Mã Đơn hàng</th>
+                                <th class="py-3 px-4">Khách hàng</th>
+                                <th class="py-3 px-4">Ngày đặt</th>
+                                <th class="py-3 px-4">Trạng thái</th>
+                                <th class="py-3 px-4">Tổng tiền</th>
+                                <th class="py-3 px-4 text-center">Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody id="canceled-returned-orders-table-body" class="text-gray-600 text-sm font-light">
+                            <!-- Dữ liệu đơn hàng hủy/trả hàng sẽ được thêm vào đây bằng JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Books Section -->
+            <div id="books-section" class="main-section hidden">
+                <div class="bg-white rounded-xl shadow-sm p-6">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-4">Quản lý Sách</h2>
+                    <table class="w-full text-left table-auto border-collapse">
+                        <thead>
+                            <tr class="bg-gray-50 text-gray-600 uppercase text-sm leading-normal">
+                                <th class="py-3 px-4">Ảnh bìa</th>
+                                <th class="py-3 px-4">Tên sách</th>
+                                <th class="py-3 px-4">Tác giả</th>
+                                <th class="py-3 px-4">Giá bán</th>
+                                <th class="py-3 px-4">Tồn kho</th>
+                                <th class="py-3 px-4 text-center">Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody id="books-table-body" class="text-gray-600 text-sm font-light">
+                            <!-- Dữ liệu sách sẽ được thêm vào đây bằng JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Reviews Section -->
+            <div id="reviews-section" class="main-section hidden">
+                <div class="bg-white rounded-xl shadow-sm p-6">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-4">Quản lý Đánh giá và Bình luận</h2>
+                    <table class="w-full text-left table-auto border-collapse">
+                        <thead>
+                            <tr class="bg-gray-50 text-gray-600 uppercase text-sm leading-normal">
+                                <th class="py-3 px-4">Người đánh giá</th>
+                                <th class="py-3 px-4">Sách</th>
+                                <th class="py-3 px-4">Số sao</th>
+                                <th class="py-3 px-4">Bình luận</th>
+                                <th class="py-3 px-4">Ngày</th>
+                                <th class="py-3 px-4 text-center">Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody id="reviews-table-body" class="text-gray-600 text-sm font-light">
+                            <!-- Dữ liệu đánh giá sẽ được thêm vào đây bằng JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Sales Section (New) -->
+            <div id="sales-section" class="main-section hidden">
+                <div class="bg-white rounded-xl shadow-sm p-6">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-4">Thống kê Doanh thu</h2>
+                    <div id="sales-summary" class="mb-6 bg-gray-50 p-4 rounded-lg">
+                        <!-- Summary will be populated by JS -->
+                    </div>
+                    <table class="w-full text-left table-auto border-collapse">
+                        <thead>
+                            <tr class="bg-gray-50 text-gray-600 uppercase text-sm leading-normal">
+                                <th class="py-3 px-4">Tên Sách</th>
+                                <th class="py-3 px-4 text-right">Số lượng bán</th>
+                                <th class="py-3 px-4 text-right">Tổng tiền</th>
+                            </tr>
+                        </thead>
+                        <tbody id="sales-table-body" class="text-gray-600 text-sm font-light">
+                            <!-- Dữ liệu sách đã bán sẽ được thêm vào đây bằng JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Order Detail Modal -->
+    <div id="order-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden flex justify-center items-center p-4 z-50">
+        <div class="bg-white rounded-xl shadow-lg w-full max-w-2xl p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold text-gray-800">Chi tiết Đơn hàng <span id="order-id"></span></h3>
+                <button onclick="closeModal('order-modal')" class="text-gray-500 hover:text-gray-800">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <div class="overflow-y-auto max-h-[70vh]">
+                <div class="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                        <h4 class="font-semibold text-gray-700 mb-2">Thông tin Khách hàng</h4>
+                        <p>Tên: <span id="customer-name"></span></p>
+                        <p>SĐT: <span id="customer-phone"></span></p>
+                        <p>Địa chỉ: <span id="customer-address"></span></p>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold text-gray-700 mb-2">Trạng thái Đơn hàng</h4>
+                        <div class="flex items-center space-x-2">
+                            <span id="order-status-badge" class="status-badge"></span>
+                            <div id="status-update-container" class="flex items-center space-x-2">
+                                <select id="status-select" class="form-select border rounded-lg p-1.5 text-sm">
+                                    <option value="Chờ xác nhận">Chờ xác nhận</option>
+                                    <option value="Đã xác nhận">Đã xác nhận</option>
+                                    <option value="Đang giao">Đang giao</option>
+                                    <option value="Đã hoàn tất">Đã hoàn tất</option>
+                                </select>
+                                <button onclick="updateStatus()" class="bg-blue-500 text-white px-3 py-1.5 rounded-lg text-sm hover:bg-blue-600">Cập nhật</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <h4 class="font-semibold text-gray-700 mb-2">Sản phẩm</h4>
+                    <table class="w-full text-sm text-left border-collapse">
+                        <thead>
+                            <tr class="bg-gray-50 text-gray-600 uppercase">
+                                <th class="py-2 px-3">Sản phẩm</th>
+                                <th class="py-2 px-3">Số lượng</th>
+                                <th class="py-2 px-3">Đơn giá</th>
+                                <th class="py-2 px-3">Thành tiền</th>
+                            </tr>
+                        </thead>
+                        <tbody id="order-items-body" class="text-gray-700">
+                            <!-- Items go here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="mt-4 text-right border-t pt-4">
+                <p class="font-bold text-gray-800">Tổng thanh toán: <span id="order-total-amount"></span></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Book Modal -->
+    <div id="book-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden flex justify-center items-center p-4 z-50">
+        <div class="bg-white rounded-xl shadow-lg w-full max-w-2xl p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold text-gray-800">Chỉnh sửa Sách</h3>
+                <button onclick="closeModal('book-modal')" class="text-gray-500 hover:text-gray-800">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <form id="book-edit-form">
+                <input type="hidden" id="book-edit-id">
+                <div class="mb-4">
+                    <label for="book-title" class="block text-gray-700 font-medium mb-1">Tên sách</label>
+                    <input type="text" id="book-title" class="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div class="mb-4">
+                    <label for="book-author" class="block text-gray-700 font-medium mb-1">Tác giả</label>
+                    <input type="text" id="book-author" class="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div class="mb-4">
+                    <label for="book-description" class="block text-gray-700 font-medium mb-1">Mô tả sách</label>
+                    <textarea id="book-description" rows="4" class="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+                </div>
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label for="book-price" class="block text-gray-700 font-medium mb-1">Giá bán</label>
+                        <input type="number" id="book-price" class="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                </div>
+                <div class="flex justify-end space-x-2">
+                    <button type="button" onclick="closeModal('book-modal')" class="bg-gray-200 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-300">Hủy</button>
+                    <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600">Lưu thay đổi</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const sections = document.querySelectorAll('.main-section');
+            const navLinks = document.querySelectorAll('.nav-link');
+            const ordersTableBody = document.getElementById('orders-table-body');
+            const booksTableBody = document.getElementById('books-table-body');
+            const reviewsTableBody = document.getElementById('reviews-table-body');
+            const salesTableBody = document.getElementById('sales-table-body');
+            const salesSummary = document.getElementById('sales-summary');
+            const canceledReturnedOrdersTableBody = document.getElementById('canceled-returned-orders-table-body');
+
+            // Dữ liệu giả định
+            const orders = [
+                { id: 'DH001', customer: 'Nguyễn Văn A', date: '10/10/2023', status: 'Chờ xác nhận', total: '150.000đ', items: [{ name: 'Sách Marketing', qty: 1, price: 150000 }] },
+                { id: 'DH002', customer: 'Trần Thị B', date: '09/10/2023', status: 'Đang giao', total: '250.000đ', items: [{ name: 'Lập trình Python', qty: 2, price: 100000 }, { name: 'Mô hình 3D', qty: 1, price: 50000 }] },
+                { id: 'DH003', customer: 'Lê Văn C', date: '08/10/2023', status: 'Đã hoàn tất', total: '75.000đ', items: [{ name: 'Tâm lý học', qty: 1, price: 75000 }] },
+                { id: 'DH004', customer: 'Phạm Thị D', date: '07/10/2023', status: 'Đã hủy', total: '300.000đ', items: [{ name: 'Sử thi Việt Nam', qty: 3, price: 100000 }] },
+                { id: 'DH005', customer: 'Hoàng Văn E', date: '07/10/2023', status: 'Đã hoàn tất', total: '200.000đ', items: [{ name: 'Lập trình Python', qty: 1, price: 200000 }] },
+                { id: 'DH006', customer: 'Phan Thị G', date: '07/10/2023', status: 'Đã hoàn tất', total: '150.000đ', items: [{ name: 'Sách Marketing', qty: 1, price: 150000 }] },
+                { id: 'DH007', customer: 'Trần Văn H', date: '06/10/2023', status: 'Yêu cầu trả hàng', total: '550.000đ', items: [{ name: 'Lập trình Python', qty: 1, price: 200000 }, { name: 'Marketing Kỷ nguyên số', qty: 1, price: 150000 }] },
+                { id: 'DH008', customer: 'Lê Thị I', date: '06/10/2023', status: 'Đã hủy', total: '200.000đ', items: [{ name: 'Tâm lý học', qty: 2, price: 75000 }] },
+            ];
+
+            const books = [
+                { id: 'B001', title: 'Lập trình Python từ A-Z', author: 'Jack P.', price: '200.000đ', stock: 50, image: 'https://placehold.co/100x150/e0e0e0/ffffff?text=Sách+1', description: 'Một cuốn sách tuyệt vời để học lập trình Python.' },
+                { id: 'B002', title: 'Marketing Kỷ nguyên số', author: 'Sarah L.', price: '150.000đ', stock: 0, image: 'https://placehold.co/100x150/e0e0e0/ffffff?text=Sách+2', description: 'Cuốn sách này giúp bạn nắm bắt các xu hướng marketing hiện đại.' },
+                { id: 'B003', title: 'Truyện cổ tích Việt Nam', author: 'Nhiều tác giả', price: '95.000đ', stock: 15, image: 'https://placehold.co/100x150/e0e0e0/ffffff?text=Sách+3', description: 'Tuyển tập những câu chuyện cổ tích hay nhất của Việt Nam.' },
+            ];
+            
+            // Dữ liệu đánh giá giả định
+            const reviews = [
+                { id: 'R001', reviewerName: 'Nguyễn Văn E', bookTitle: 'Lập trình Python từ A-Z', rating: 5, comment: 'Sách rất hay, dễ hiểu, phù hợp cho người mới bắt đầu.', date: '11/10/2023', isHidden: false },
+                { id: 'R002', reviewerName: 'Trần Thị F', bookTitle: 'Marketing Kỷ nguyên số', rating: 3, comment: 'Nội dung chưa cập nhật nhiều lắm, cần thêm ví dụ thực tế.', date: '10/10/2023', isHidden: false },
+                { id: 'R003', reviewerName: 'Phạm Văn G', bookTitle: 'Truyện cổ tích Việt Nam', rating: 4, comment: 'Đóng gói cẩn thận, sách đẹp, nội dung đúng như mong đợi.', date: '12/10/2023', isHidden: true },
+            ];
+
+            // Hàm chuyển đổi màu sắc trạng thái
+            const getStatusColor = (status) => {
+                switch (status) {
+                    case 'Chờ xác nhận': return 'bg-yellow-200 text-yellow-800';
+                    case 'Đã xác nhận': return 'bg-blue-200 text-blue-800';
+                    case 'Đang giao': return 'bg-purple-200 text-purple-800';
+                    case 'Đã hoàn tất': return 'bg-green-200 text-green-800';
+                    case 'Đã hủy': return 'bg-red-200 text-red-800';
+                    case 'Yêu cầu trả hàng': return 'bg-orange-200 text-orange-800';
+                    default: return 'bg-gray-200 text-gray-800';
+                }
+            };
+            
+            // Hàm tạo icon sao
+            const getStarIcons = (rating) => {
+                let stars = '';
+                for (let i = 0; i < 5; i++) {
+                    stars += `<svg class="h-4 w-4 ${i < rating ? 'text-yellow-400' : 'text-gray-300'}" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.761 5.42a1 1 0 00.95.69h5.707c.969 0 1.371 1.24.588 1.81l-4.62 3.354a1 1 0 00-.364 1.118l1.762 5.42c.3.921-.755 1.688-1.54 1.118l-4.62-3.354a1 1 0 00-1.176 0l-4.62 3.354c-.784.57-1.84-.197-1.54-1.118l1.762-5.42a1 1 0 00-.364-1.118L2.5 10.857c-.783-.57-.38-1.81.588-1.81h5.707a1 1 0 00.95-.69l1.761-5.42z" />
+                              </svg>`;
+                }
+                return `<div class="flex items-center space-x-0.5">${stars}</div>`;
+            };
+
+            // Hàm hiển thị danh sách đơn hàng
+            const renderOrders = (data = orders) => {
+                ordersTableBody.innerHTML = '';
+                data.forEach(order => {
+                    const row = document.createElement('tr');
+                    row.classList.add('border-b', 'border-gray-200', 'hover:bg-gray-100');
+                    row.innerHTML = `
+                        <td class="py-3 px-4">${order.id}</td>
+                        <td class="py-3 px-4">${order.customer}</td>
+                        <td class="py-3 px-4">${order.date}</td>
+                        <td class="py-3 px-4">
+                            <span class="status-badge ${getStatusColor(order.status)}">${order.status}</span>
+                        </td>
+                        <td class="py-3 px-4">${order.total}</td>
+                        <td class="py-3 px-4 text-center">
+                            <button onclick="showOrderDetail('${order.id}')" class="bg-blue-500 text-white px-3 py-1.5 rounded-lg text-sm hover:bg-blue-600 mr-2">
+                                Xem chi tiết
+                            </button>
+                            ${order.status === 'Chờ xác nhận' ? `
+                                <button onclick="confirmOrder('${order.id}')" class="bg-green-500 text-white px-3 py-1.5 rounded-lg text-sm hover:bg-green-600">
+                                    Xác nhận
+                                </button>` : ''}
+                        </td>
+                    `;
+                    ordersTableBody.appendChild(row);
+                });
+            };
+
+            // Hàm hiển thị danh sách đơn hàng đã hủy và trả hàng
+            const renderCanceledReturnedOrders = () => {
+                canceledReturnedOrdersTableBody.innerHTML = '';
+                const filteredOrders = orders.filter(order => order.status === 'Đã hủy' || order.status === 'Yêu cầu trả hàng');
+                filteredOrders.forEach(order => {
+                    const row = document.createElement('tr');
+                    row.classList.add('border-b', 'border-gray-200', 'hover:bg-gray-100');
+                    row.innerHTML = `
+                        <td class="py-3 px-4">${order.id}</td>
+                        <td class="py-3 px-4">${order.customer}</td>
+                        <td class="py-3 px-4">${order.date}</td>
+                        <td class="py-3 px-4">
+                            <span class="status-badge ${getStatusColor(order.status)}">${order.status}</span>
+                        </td>
+                        <td class="py-3 px-4">${order.total}</td>
+                        <td class="py-3 px-4 text-center">
+                            <button onclick="showOrderDetail('${order.id}')" class="bg-blue-500 text-white px-3 py-1.5 rounded-lg text-sm hover:bg-blue-600">
+                                Xem chi tiết
+                            </button>
+                        </td>
+                    `;
+                    canceledReturnedOrdersTableBody.appendChild(row);
+                });
+            };
+
+            // Hàm hiển thị danh sách sách
+            const renderBooks = () => {
+                booksTableBody.innerHTML = '';
+                books.forEach(book => {
+                    const row = document.createElement('tr');
+                    row.classList.add('border-b', 'border-gray-200', 'hover:bg-gray-100');
+                    row.innerHTML = `
+                        <td class="py-3 px-4">
+                            <img src="${book.image}" alt="${book.title}" class="w-12 h-18 rounded-lg object-cover">
+                        </td>
+                        <td class="py-3 px-4">${book.title}</td>
+                        <td class="py-3 px-4">${book.author}</td>
+                        <td class="py-3 px-4">${book.price}</td>
+                        <td class="py-3 px-4 ${book.stock <= 0 ? 'font-bold text-red-600' : ''}">${book.stock}</td>
+                        <td class="py-3 px-4 text-center">
+                            <button onclick="showBookDetail('${book.id}')" class="bg-blue-500 text-white px-3 py-1.5 rounded-lg text-sm hover:bg-blue-600">
+                                Chỉnh sửa
+                            </button>
+                        </td>
+                    `;
+                    booksTableBody.appendChild(row);
+                });
+            };
+
+            // Hàm hiển thị danh sách đánh giá
+            const renderReviews = () => {
+                reviewsTableBody.innerHTML = '';
+                reviews.forEach(review => {
+                    const row = document.createElement('tr');
+                    row.classList.add('border-b', 'border-gray-200', 'hover:bg-gray-100');
+                    row.innerHTML = `
+                        <td class="py-3 px-4">${review.reviewerName}</td>
+                        <td class="py-3 px-4">${review.bookTitle}</td>
+                        <td class="py-3 px-4">${getStarIcons(review.rating)}</td>
+                        <td class="py-3 px-4 max-w-xs overflow-hidden text-ellipsis whitespace-nowrap">${review.comment}</td>
+                        <td class="py-3 px-4">${review.date}</td>
+                        <td class="py-3 px-4 text-center">
+                            <button onclick="deleteReview('${review.id}')" class="bg-red-500 text-white px-3 py-1.5 rounded-lg text-sm hover:bg-red-600 mr-2">
+                                Xóa
+                            </button>
+                            <button onclick="toggleReviewVisibility('${review.id}')" class="bg-yellow-500 text-white px-3 py-1.5 rounded-lg text-sm hover:bg-yellow-600">
+                                ${review.isHidden ? 'Hiện' : 'Ẩn'}
+                            </button>
+                        </td>
+                    `;
+                    reviewsTableBody.appendChild(row);
+                });
+            };
+            
+            // Hàm mới để chuyển đổi phần hiển thị và trạng thái active của link
+            const setActiveSectionAndLink = (targetId) => {
+                // Ẩn tất cả các sections và xóa class active của nav links
+                sections.forEach(s => s.classList.add('hidden'));
+                navLinks.forEach(l => l.classList.remove('active'));
+
+                // Hiển thị section mong muốn và thêm class active cho link tương ứng
+                document.getElementById(targetId).classList.remove('hidden');
+                const targetLink = document.querySelector(`.nav-link[data-target="${targetId}"]`);
+                if (targetLink) {
+                    targetLink.classList.add('active');
+                }
+
+                // Nếu là sales-section, render lại dữ liệu
+                if (targetId === 'sales-section') {
+                    renderSales();
+                } else if (targetId === 'canceled-returned-orders-section') {
+                    renderCanceledReturnedOrders();
+                }
+            };
+
+            // Cập nhật logic chuyển đổi section bằng hàm mới
+            navLinks.forEach(link => {
+                link.addEventListener('click', () => {
+                    const targetId = link.getAttribute('data-target');
+                    setActiveSectionAndLink(targetId);
+                });
+            });
+
+            // Gán hàm vào window để có thể gọi từ HTML onclick
+            window.setActiveSectionAndLink = setActiveSectionAndLink;
+
+            // Hàm mở modal
+            window.showModal = (modalId) => {
+                document.getElementById(modalId).classList.remove('hidden');
+            };
+
+            // Hàm đóng modal
+            window.closeModal = (modalId) => {
+                document.getElementById(modalId).classList.add('hidden');
+            };
+
+            // Hàm hiển thị chi tiết đơn hàng
+            window.showOrderDetail = (orderId) => {
+                const order = orders.find(o => o.id === orderId);
+                if (!order) return;
+                
+                document.getElementById('order-id').innerText = order.id;
+                document.getElementById('customer-name').innerText = order.customer;
+                document.getElementById('customer-phone').innerText = '0987654321'; // Dữ liệu giả định
+                document.getElementById('customer-address').innerText = '123 Đường ABC, Quận XYZ, TP.HCM'; // Dữ liệu giả định
+                document.getElementById('order-status-badge').innerText = order.status;
+                document.getElementById('order-status-badge').className = `status-badge ${getStatusColor(order.status)}`;
+                document.getElementById('order-total-amount').innerText = order.total;
+
+                // Ẩn/hiện dropdown và nút cập nhật tùy theo trạng thái đơn hàng
+                const statusUpdateContainer = document.getElementById('status-update-container');
+                if (order.status === 'Đã hủy' || order.status === 'Yêu cầu trả hàng') {
+                    statusUpdateContainer.classList.add('hidden');
+                } else {
+                    statusUpdateContainer.classList.remove('hidden');
+                    document.getElementById('status-select').value = order.status;
+                }
+
+                const itemsBody = document.getElementById('order-items-body');
+                itemsBody.innerHTML = '';
+                order.items.forEach(item => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td class="py-2 px-3">${item.name}</td>
+                        <td class="py-2 px-3">${item.qty}</td>
+                        <td class="py-2 px-3">${item.price.toLocaleString('vi-VN')}đ</td>
+                        <td class="py-2 px-3">${(item.qty * item.price).toLocaleString('vi-VN')}đ</td>
+                    `;
+                    itemsBody.appendChild(row);
+                });
+
+                showModal('order-modal');
+            };
+
+            // Hàm xác nhận đơn hàng (chỉ là giả lập)
+            window.confirmOrder = (orderId) => {
+                const order = orders.find(o => o.id === orderId);
+                if (order) {
+                    order.status = 'Đã xác nhận';
+                    renderOrders();
+                }
+            };
+            
+            // Hàm cập nhật trạng thái
+            window.updateStatus = () => {
+                const orderId = document.getElementById('order-id').innerText;
+                const newStatus = document.getElementById('status-select').value;
+                const order = orders.find(o => o.id === orderId);
+                if (order) {
+                    order.status = newStatus;
+                    renderOrders();
+                    renderCanceledReturnedOrders();
+                    closeModal('order-modal');
+                }
+            };
+
+            // Hàm hiển thị chi tiết sách để chỉnh sửa
+            window.showBookDetail = (bookId) => {
+                const book = books.find(b => b.id === bookId);
+                if (!book) return;
+
+                document.getElementById('book-edit-id').value = book.id;
+                document.getElementById('book-title').value = book.title;
+                document.getElementById('book-author').value = book.author;
+                document.getElementById('book-description').value = book.description;
+                document.getElementById('book-price').value = parseInt(book.price.replace(/[^\d]/g, ''));
+
+                showModal('book-modal');
+            };
+
+            // Xử lý khi nhấn nút Lưu trong form chỉnh sửa sách
+            document.getElementById('book-edit-form').addEventListener('submit', (e) => {
+                e.preventDefault();
+                const bookId = document.getElementById('book-edit-id').value;
+                const book = books.find(b => b.id === bookId);
+
+                if (book) {
+                    book.title = document.getElementById('book-title').value;
+                    book.author = document.getElementById('book-author').value;
+                    book.description = document.getElementById('book-description').value;
+                    book.price = parseInt(document.getElementById('book-price').value).toLocaleString('vi-VN') + 'đ';
+                }
+
+                renderBooks();
+                closeModal('book-modal');
+            });
+            
+            // Hàm xóa đánh giá (giả lập)
+            window.deleteReview = (reviewId) => {
+                const reviewIndex = reviews.findIndex(r => r.id === reviewId);
+                if (reviewIndex > -1) {
+                    reviews.splice(reviewIndex, 1);
+                    renderReviews();
+                    console.log(`Đã xóa đánh giá có ID: ${reviewId}`);
+                }
+            };
+
+            // Hàm ẩn/hiện đánh giá (giả lập)
+            window.toggleReviewVisibility = (reviewId) => {
+                const review = reviews.find(r => r.id === reviewId);
+                if (review) {
+                    review.isHidden = !review.isHidden;
+                    renderReviews();
+                    console.log(`Đã ${review.isHidden ? 'ẩn' : 'hiện'} đánh giá có ID: ${reviewId}`);
+                }
+            };
+            
+            // Hàm tính toán và hiển thị dữ liệu doanh thu
+            const renderSales = () => {
+                let salesData = {};
+                let totalQuantitySold = 0;
+                let totalRevenue = 0;
+
+                // Lọc các đơn hàng đã hoàn tất
+                const completedOrders = orders.filter(o => o.status === 'Đã hoàn tất');
+
+                // Tổng hợp dữ liệu bán hàng
+                completedOrders.forEach(order => {
+                    const totalValue = parseInt(order.total.replace(/[^\d]/g, ''));
+                    totalRevenue += totalValue;
+
+                    order.items.forEach(item => {
+                        const bookName = item.name;
+                        const quantity = item.qty;
+                        totalQuantitySold += quantity;
+
+                        if (salesData[bookName]) {
+                            salesData[bookName].quantity += quantity;
+                            salesData[bookName].total += quantity * item.price;
+                        } else {
+                            salesData[bookName] = {
+                                quantity: quantity,
+                                total: quantity * item.price
+                            };
+                        }
+                    });
+                });
+
+                // Hiển thị tóm tắt doanh thu
+                salesSummary.innerHTML = `
+                    <p class="text-gray-700 font-bold text-lg">Tổng số sách đã bán: <span class="text-blue-600">${totalQuantitySold}</span></p>
+                    <p class="text-gray-700 font-bold text-lg">Tổng doanh thu: <span class="text-green-600">${totalRevenue.toLocaleString('vi-VN')}đ</span></p>
+                `;
+
+                // Hiển thị bảng chi tiết
+                salesTableBody.innerHTML = '';
+                for (const book in salesData) {
+                    const row = document.createElement('tr');
+                    row.classList.add('border-b', 'border-gray-200', 'hover:bg-gray-100');
+                    row.innerHTML = `
+                        <td class="py-3 px-4">${book}</td>
+                        <td class="py-3 px-4 text-right">${salesData[book].quantity}</td>
+                        <td class="py-3 px-4 text-right">${salesData[book].total.toLocaleString('vi-VN')}đ</td>
+                    `;
+                    salesTableBody.appendChild(row);
+                }
+            };
+
+
+            // Khởi tạo giao diện
+            renderOrders();
+            renderBooks();
+            renderReviews();
+        });
+    </script>
+
+</body>
+</html>

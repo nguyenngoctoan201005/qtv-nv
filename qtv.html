@@ -1,0 +1,1438 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản Trị Sách Online</title>
+    <!-- Nhúng Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <!-- Nhúng Font Awesome cho biểu tượng -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+        /* CSS cho sidebar cố định */
+        .sidebar {
+            width: 280px;
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            transition: transform 0.3s ease-in-out;
+            z-index: 50;
+        }
+        .main-content {
+            margin-left: 280px;
+            transition: margin-left 0.3s ease-in-out;
+        }
+        .sidebar.closed {
+            transform: translateX(-280px);
+        }
+        .main-content.shifted {
+            margin-left: 0;
+        }
+        .card-animate {
+            transition: transform 0.2s ease-in-out;
+        }
+        .card-animate:hover {
+            transform: translateY(-5px);
+        }
+        /* Style cho nút đóng sidebar */
+        .sidebar-toggle {
+            display: none;
+        }
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-280px);
+            }
+            .sidebar.open {
+                transform: translateX(0);
+            }
+            .main-content {
+                margin-left: 0;
+            }
+            .sidebar-toggle {
+                display: block;
+            }
+        }
+        .alert {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .modal {
+            transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans">
+
+    <!-- Sidebar -->
+    <aside id="sidebar" class="sidebar bg-white shadow-xl flex flex-col p-4 md:shadow-none md:border-r border-gray-200">
+        <div class="flex items-center justify-between pb-4 mb-4 border-b border-gray-200">
+            <h1 class="text-2xl font-bold text-gray-800">Quản Trị Sách</h1>
+            <button id="close-sidebar-btn" class="md:hidden text-gray-500 hover:text-gray-700 focus:outline-none">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <!-- Menu Items -->
+        <nav class="flex-grow">
+            <ul class="space-y-2">
+                <li>
+                    <a href="#dashboard" class="menu-item group flex items-center p-3 rounded-lg text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors duration-200" data-view="dashboard">
+                        <i class="fas fa-chart-line w-6 h-6 mr-3 text-gray-500 group-hover:text-blue-600"></i>
+                        <span class="font-medium">Thống kê & Đơn hàng</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#books" class="menu-item group flex items-center p-3 rounded-lg text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors duration-200" data-view="books">
+                        <i class="fas fa-book-open w-6 h-6 mr-3 text-gray-500 group-hover:text-blue-600"></i>
+                        <span class="font-medium">Quản lý Sách</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#categories" class="menu-item group flex items-center p-3 rounded-lg text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors duration-200" data-view="categories">
+                        <i class="fas fa-tags w-6 h-6 mr-3 text-gray-500 group-hover:text-blue-600"></i>
+                        <span class="font-medium">Quản lý Danh mục</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#customers" class="menu-item group flex items-center p-3 rounded-lg text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors duration-200" data-view="customers">
+                        <i class="fas fa-users w-6 h-6 mr-3 text-gray-500 group-hover:text-blue-600"></i>
+                        <span class="font-medium">Khách hàng</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#employees" class="menu-item group flex items-center p-3 rounded-lg text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors duration-200" data-view="employees">
+                        <i class="fas fa-user-tie w-6 h-6 mr-3 text-gray-500 group-hover:text-blue-600"></i>
+                        <span class="font-medium">Nhân viên</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#promotions" class="menu-item group flex items-center p-3 rounded-lg text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors duration-200" data-view="promotions">
+                        <i class="fas fa-gift w-6 h-6 mr-3 text-gray-500 group-hover:text-blue-600"></i>
+                        <span class="font-medium">Khuyến mãi</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+        <!-- Footer sidebar -->
+        <div class="mt-auto pt-4 border-t border-gray-200">
+            <a href="#" class="flex items-center p-3 rounded-lg text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors duration-200">
+                <i class="fas fa-sign-out-alt w-6 h-6 mr-3 text-gray-500"></i>
+                <span class="font-medium">Đăng xuất</span>
+            </a>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <div id="main-content" class="main-content p-6">
+        <!-- Header cho mobile -->
+        <header class="flex md:hidden items-center justify-between pb-4 mb-4">
+            <h1 class="text-2xl font-bold text-gray-800">Quản Trị Sách</h1>
+            <button id="open-sidebar-btn" class="text-gray-500 hover:text-gray-700 focus:outline-none">
+                <i class="fas fa-bars fa-lg"></i>
+            </button>
+        </header>
+
+        <!-- Container cho các view (Books, Customers...) -->
+        <div id="view-container" class="space-y-6">
+            <!-- Alert message area -->
+            <div id="alert-message-container" class="fixed top-5 right-5 z-50"></div>
+
+            <!-- Dashboard View -->
+            <div id="dashboard-view" class="view hidden">
+                <h2 class="text-3xl font-bold text-gray-800 mb-6">Thống kê & Đơn hàng</h2>
+
+                <!-- Thống kê tổng quan -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
+                    <div id="total-orders-card" class="card-animate bg-white p-6 rounded-2xl shadow-lg flex items-center justify-between cursor-pointer hover:shadow-xl transition-shadow duration-300">
+                        <div>
+                            <p class="text-sm font-semibold text-gray-500 uppercase">Tổng đơn hàng</p>
+                            <p class="text-3xl font-bold text-gray-900 mt-1">1,250</p>
+                        </div>
+                        <div class="bg-blue-100 text-blue-600 rounded-full p-3">
+                            <i class="fas fa-receipt fa-xl"></i>
+                        </div>
+                    </div>
+                    <div id="total-revenue-card" class="card-animate bg-white p-6 rounded-2xl shadow-lg flex items-center justify-between cursor-pointer hover:shadow-xl transition-shadow duration-300">
+                        <div>
+                            <p class="text-sm font-semibold text-gray-500 uppercase">Tổng doanh thu</p>
+                            <p class="text-3xl font-bold text-gray-900 mt-1">500,000,000<span class="text-base font-normal ml-1">đ</span></p>
+                        </div>
+                        <div class="bg-green-100 text-green-600 rounded-full p-3">
+                            <i class="fas fa-dollar-sign fa-xl"></i>
+                        </div>
+                    </div>
+                    <div id="total-customers-card" class="card-animate bg-white p-6 rounded-2xl shadow-lg flex items-center justify-between cursor-pointer hover:shadow-xl transition-shadow duration-300">
+                        <div>
+                            <p class="text-sm font-semibold text-gray-500 uppercase">Tổng khách hàng</p>
+                            <p class="text-3xl font-bold text-gray-900 mt-1">890</p>
+                        </div>
+                        <div class="bg-purple-100 text-purple-600 rounded-full p-3">
+                            <i class="fas fa-users fa-xl"></i>
+                        </div>
+                    </div>
+                    <div class="card-animate bg-white p-6 rounded-2xl shadow-lg flex items-center justify-between hover:shadow-xl transition-shadow duration-300">
+                        <div>
+                            <p class="text-sm font-semibold text-gray-500 uppercase">Sản phẩm bán chạy</p>
+                            <p class="text-lg font-bold text-gray-900 mt-1">Đắc Nhân Tâm</p>
+                        </div>
+                        <div class="bg-yellow-100 text-yellow-600 rounded-full p-3">
+                            <i class="fas fa-star fa-xl"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cảnh báo tồn kho thấp -->
+                <div class="bg-white p-6 rounded-xl shadow-lg mb-6">
+                    <h3 class="text-xl font-bold text-gray-800 mb-4">Cảnh báo Tồn kho thấp (<span id="low-stock-count"></span>)</h3>
+                    <div id="low-stock-items" class="space-y-4">
+                        <!-- Items will be populated by JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Books View -->
+            <div id="books-view" class="view hidden">
+                <div id="books-list-section" class="space-y-6">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6">
+                        <h2 class="text-3xl font-bold text-gray-800 mb-4 sm:mb-0">Quản lý Sách</h2>
+                        <button id="add-book-btn" class="bg-blue-600 text-white font-semibold py-2 px-6 rounded-lg shadow-md hover:bg-blue-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500" onclick="showAddBookForm()">
+                            <i class="fas fa-plus mr-2"></i>Thêm Sách Mới
+                        </button>
+                    </div>
+                    
+                    <!-- Thanh tìm kiếm và bộ lọc -->
+                    <div class="bg-white p-6 rounded-xl shadow-lg mb-6">
+                        <div class="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4">
+                            <input type="text" id="searchInput" placeholder="Tìm kiếm theo Tên sách, Tác giả..." class="flex-grow p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <select id="categoryFilter" class="p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="">Tất cả Thể loại</option>
+                                <!-- Options will be added by JS -->
+                            </select>
+                            <select id="statusFilter" class="p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="">Tất cả Trạng thái</option>
+                                <option value="Còn hàng">Còn hàng</option>
+                                <option value="Hết hàng">Hết hàng</option>
+                            </select>
+                            <button id="searchBtn" class="bg-gray-200 text-gray-700 font-semibold p-3 rounded-lg hover:bg-gray-300 transition-colors duration-200">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Bảng Danh sách Sách -->
+                    <div class="bg-white p-6 rounded-xl shadow-lg overflow-x-auto">
+                        <table class="w-full text-left table-auto">
+                            <thead>
+                                <tr class="bg-gray-100 text-gray-600 uppercase text-sm leading-normal">
+                                    <th class="py-3 px-6 text-left">Sách</th>
+                                    <th class="py-3 px-6 text-center">Giá</th>
+                                    <th class="py-3 px-6 text-center">Tồn kho</th>
+                                    <th class="py-3 px-6 text-center">Trạng thái</th>
+                                    <th class="py-3 px-6 text-center">Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody id="books-table-body" class="text-gray-600 text-sm font-light">
+                                <!-- Data sẽ được thêm bằng JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- Giao diện Thêm Sách Mới -->
+                <div id="add-book-form-section" class="hidden bg-white p-8 rounded-2xl shadow-lg w-full max-w-2xl mx-auto">
+                    <button class="text-gray-500 hover:text-gray-700 mb-4" onclick="showBooksList()">
+                        <i class="fas fa-arrow-left mr-2"></i> Quay lại
+                    </button>
+                    <h2 class="text-3xl font-bold text-center text-gray-800 mb-6">Thêm Sách Mới</h2>
+                    <form id="add-book-form" class="space-y-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label for="new-book-title" class="block text-sm font-medium text-gray-700">Tên Sách</label>
+                                <input type="text" id="new-book-title" name="ten" placeholder="Nhập tên sách" class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500" required>
+                            </div>
+                            <div>
+                                <label for="new-book-author" class="block text-sm font-medium text-gray-700">Tác Giả</label>
+                                <input type="text" id="new-book-author" name="tacgia" placeholder="Nhập tên tác giả" class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500" required>
+                            </div>
+                        </div>
+                        <div>
+                            <label for="new-book-category" class="block text-sm font-medium text-gray-700">Thể Loại</label>
+                            <select id="new-book-category" name="theloai" class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500" required>
+                                <!-- Options sẽ được thêm bằng JavaScript -->
+                            </select>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label for="new-book-price" class="block text-sm font-medium text-gray-700">Giá</label>
+                                <input type="number" id="new-book-price" name="gia" placeholder="Nhập giá" min="0" class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500" required>
+                            </div>
+                            <div>
+                                <label for="new-book-stock" class="block text-sm font-medium text-gray-700">Số Lượng Tồn Kho</label>
+                                <input type="number" id="new-book-stock" name="soluong" placeholder="Số lượng" min="0" value="1" class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500" required>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex items-center justify-between mb-1">
+                                <label for="new-book-description" class="block text-sm font-medium text-gray-700">Mô Tả Ngắn</label>
+                                <button type="button" id="generate-description-btn" class="text-sm font-medium text-blue-600 hover:underline">
+                                    Tạo Mô Tả ✨
+                                </button>
+                            </div>
+                            <textarea id="new-book-description" name="mota" rows="3" placeholder="Nhập mô tả nội dung sách" class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500" required></textarea>
+                        </div>
+                        <div class="flex justify-center">
+                            <button type="submit" class="w-full px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-transform transform hover:scale-105">
+                                Lưu Sách
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Categories View -->
+            <div id="categories-view" class="view hidden">
+                <div id="categories-list-section" class="space-y-6">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6">
+                        <h2 class="text-3xl font-bold text-gray-800 mb-4 sm:mb-0">Quản lý Danh mục Sách</h2>
+                        <button id="add-category-btn" class="bg-blue-600 text-white font-semibold py-2 px-6 rounded-lg shadow-md hover:bg-blue-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500" onclick="showAddCategoryForm()">
+                            <i class="fas fa-plus mr-2"></i>Thêm Danh mục
+                        </button>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-lg overflow-x-auto">
+                        <table class="w-full text-left table-auto">
+                            <thead>
+                                <tr class="bg-gray-100 text-gray-600 uppercase text-sm leading-normal">
+                                    <th class="py-3 px-6 text-left">Tên Danh mục</th>
+                                    <th class="py-3 px-6 text-center">Số sách</th>
+                                    <th class="py-3 px-6 text-center">Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody id="categories-table-body" class="text-gray-600 text-sm font-light">
+                                <!-- Data sẽ được thêm bằng JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Giao diện Thêm Danh mục Mới -->
+                <div id="add-category-form-section" class="hidden bg-white p-8 rounded-2xl shadow-lg w-full max-w-xl mx-auto">
+                    <button class="text-gray-500 hover:text-gray-700 mb-4" onclick="showCategoriesList()">
+                        <i class="fas fa-arrow-left mr-2"></i> Quay lại
+                    </button>
+                    <h2 class="text-3xl font-bold text-center text-gray-800 mb-6">Thêm Danh Mục Mới</h2>
+                    <form id="add-category-form" class="space-y-6">
+                        <div>
+                            <label for="new-category-name" class="block text-sm font-medium text-gray-700">Tên Danh mục</label>
+                            <input type="text" id="new-category-name" name="ten_danh_muc" placeholder="Nhập tên danh mục" class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500" required>
+                        </div>
+                        <div class="flex justify-center">
+                            <button type="submit" class="w-full px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-transform transform hover:scale-105">
+                                Lưu Danh mục
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Customers View -->
+            <div id="customers-view" class="view hidden">
+                <h2 class="text-3xl font-bold text-gray-800 mb-6">Quản lý Khách hàng</h2>
+                <div class="bg-white p-6 rounded-xl shadow-lg overflow-x-auto">
+                    <table class="w-full text-left table-auto">
+                        <thead>
+                            <tr class="bg-gray-100 text-gray-600 uppercase text-sm leading-normal">
+                                <th class="py-3 px-6 text-left">Khách hàng</th>
+                                <th class="py-3 px-6 text-center">Email</th>
+                                <th class="py-3 px-6 text-center">Tổng đơn hàng</th>
+                                <th class="py-3 px-6 text-center">Tổng chi tiêu</th>
+                                <th class="py-3 px-6 text-center">Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody id="customers-table-body" class="text-gray-600 text-sm font-light">
+                            <!-- Data sẽ được thêm bằng JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Employees View -->
+            <div id="employees-view" class="view hidden">
+                <div id="employees-list-section" class="space-y-6">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6">
+                        <h2 class="text-3xl font-bold text-gray-800 mb-4 sm:mb-0">Quản lý Nhân viên</h2>
+                        <button id="add-employee-btn" class="bg-blue-600 text-white font-semibold py-2 px-6 rounded-lg shadow-md hover:bg-blue-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500" onclick="showAddEmployeeForm()">
+                            <i class="fas fa-user-plus mr-2"></i>Thêm Nhân viên
+                        </button>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-lg overflow-x-auto">
+                        <table class="w-full text-left table-auto">
+                            <thead>
+                                <tr class="bg-gray-100 text-gray-600 uppercase text-sm leading-normal">
+                                    <th class="py-3 px-6 text-left">Nhân viên</th>
+                                    <th class="py-3 px-6 text-center">Email</th>
+                                    <th class="py-3 px-6 text-center">Vai trò</th>
+                                    <th class="py-3 px-6 text-center">Trạng thái</th>
+                                    <th class="py-3 px-6 text-center">Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody id="employees-table-body" class="text-gray-600 text-sm font-light">
+                                <!-- Data sẽ được thêm bằng JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Giao diện Thêm Nhân viên Mới -->
+                <div id="add-employee-form-section" class="hidden bg-white p-8 rounded-2xl shadow-lg w-full max-w-2xl mx-auto">
+                    <button class="text-gray-500 hover:text-gray-700 mb-4" onclick="showEmployeesList()">
+                        <i class="fas fa-arrow-left mr-2"></i> Quay lại
+                    </button>
+                    <h2 class="text-3xl font-bold text-center text-gray-800 mb-6">Thêm Nhân Viên Mới</h2>
+                    <form id="add-employee-form" class="space-y-6">
+                        <div>
+                            <label for="new-employee-name" class="block text-sm font-medium text-gray-700">Họ và Tên</label>
+                            <input type="text" id="new-employee-name" name="ten" placeholder="Nhập họ và tên" class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500" required>
+                        </div>
+                        <div>
+                            <label for="new-employee-email" class="block text-sm font-medium text-gray-700">Email</label>
+                            <input type="email" id="new-employee-email" name="email" placeholder="Nhập email" class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500" required>
+                        </div>
+                        <div>
+                            <label for="new-employee-password" class="block text-sm font-medium text-gray-700">Mật Khẩu</label>
+                            <input type="password" id="new-employee-password" name="matkhau" placeholder="Tạo mật khẩu" class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500" required>
+                        </div>
+                        <div>
+                            <label for="new-employee-role" class="block text-sm font-medium text-gray-700">Vị Trí Công Việc</label>
+                            <input type="text" id="new-employee-role" name="vitri" placeholder="Ví dụ: Thủ thư, Quản lý" class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500" required>
+                        </div>
+                        <div class="flex justify-center">
+                            <button type="submit" class="w-full px-6 py-3 bg-green-600 text-white font-semibold rounded-lg shadow-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-transform transform hover:scale-105">
+                                Thêm Nhân Viên
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Promotions View -->
+            <div id="promotions-view" class="view hidden">
+                <div id="promotions-list-section" class="space-y-6">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6">
+                        <h2 class="text-3xl font-bold text-gray-800 mb-4 sm:mb-0">Quản lý Khuyến mãi & Mã giảm giá</h2>
+                        <button id="add-promotion-btn" class="bg-blue-600 text-white font-semibold py-2 px-6 rounded-lg shadow-md hover:bg-blue-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500" onclick="showAddPromotionForm()">
+                            <i class="fas fa-plus mr-2"></i>Thêm Mã
+                        </button>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-lg overflow-x-auto">
+                        <table class="w-full text-left table-auto">
+                            <thead>
+                                <tr class="bg-gray-100 text-gray-600 uppercase text-sm leading-normal">
+                                    <th class="py-3 px-6 text-left">Mã</th>
+                                    <th class="py-3 px-6 text-center">Giảm giá</th>
+                                    <th class="py-3 px-6 text-center">Hạn sử dụng</th>
+                                    <th class="py-3 px-6 text-center">Trạng thái</th>
+                                    <th class="py-3 px-6 text-center">Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody id="promotions-table-body" class="text-gray-600 text-sm font-light">
+                                <!-- Data sẽ được thêm bằng JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Giao diện Thêm Mã Giảm giá Mới -->
+                <div id="add-promotion-form-section" class="hidden bg-white p-8 rounded-2xl shadow-lg w-full max-w-xl mx-auto">
+                    <button class="text-gray-500 hover:text-gray-700 mb-4" onclick="showPromotionsList()">
+                        <i class="fas fa-arrow-left mr-2"></i> Quay lại
+                    </button>
+                    <h2 class="text-3xl font-bold text-center text-gray-800 mb-6">Thêm Mã Giảm Giá Mới</h2>
+                    <form id="add-promotion-form" class="space-y-6">
+                        <div>
+                            <label for="new-promo-code" class="block text-sm font-medium text-gray-700">Mã giảm giá</label>
+                            <input type="text" id="new-promo-code" name="ma" placeholder="Ví dụ: LUNCH20" class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500" required>
+                        </div>
+                        <div>
+                            <label for="new-promo-discount" class="block text-sm font-medium text-gray-700">Giá trị giảm</label>
+                            <input type="text" id="new-promo-discount" name="giam_gia" placeholder="Ví dụ: 20% hoặc 50,000đ" class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500" required>
+                        </div>
+                        <div>
+                            <label for="new-promo-expiry" class="block text-sm font-medium text-gray-700">Hạn sử dụng</label>
+                            <input type="date" id="new-promo-expiry" name="han_su_dung" class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500" required>
+                        </div>
+                        <div class="flex justify-center">
+                            <button type="button" id="generate-promo-text-btn" class="w-full px-6 py-3 bg-indigo-600 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-transform transform hover:scale-105 mb-4">
+                                Tạo Nội Dung Quảng Cáo ✨
+                            </button>
+                        </div>
+                        <div id="promo-text-output-container" class="space-y-2 hidden">
+                             <p class="text-sm font-medium text-gray-700">Nội dung quảng cáo đã tạo:</p>
+                             <textarea id="promo-text-output" rows="4" class="block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm bg-gray-50 focus:outline-none" readonly></textarea>
+                             <button type="button" onclick="copyPromoText()" class="text-sm text-blue-500 hover:underline">Sao chép</button>
+                        </div>
+                        <div class="flex justify-center">
+                            <button type="submit" class="w-full px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-transform transform hover:scale-105">
+                                Lưu Mã Giảm Giá
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Modals (popups) -->
+            <!-- Modal Đơn hàng -->
+            <div id="orders-modal" class="modal fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center p-4 hidden">
+                <div class="bg-white rounded-lg shadow-xl overflow-y-auto max-h-[90vh] w-full max-w-4xl p-6">
+                    <div class="flex justify-between items-center mb-4 border-b pb-2">
+                        <h3 class="text-2xl font-bold text-gray-800">Tất cả Đơn hàng</h3>
+                        <button class="text-gray-500 hover:text-gray-700" onclick="hideModal('orders-modal')"><i class="fas fa-times fa-lg"></i></button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full text-left table-auto">
+                            <thead>
+                                <tr class="bg-gray-100 text-gray-600 uppercase text-sm leading-normal">
+                                    <th class="py-3 px-6 text-left">Mã Đơn hàng</th>
+                                    <th class="py-3 px-6 text-center">Khách hàng</th>
+                                    <th class="py-3 px-6 text-center">Tổng tiền</th>
+                                    <th class="py-3 px-6 text-center">Ngày đặt</th>
+                                    <th class="py-3 px-6 text-center">Trạng thái</th>
+                                    <th class="py-3 px-6 text-center">Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody id="orders-table-body" class="text-gray-600 text-sm font-light">
+                                <!-- Data sẽ được thêm bằng JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Chi tiết Đơn hàng -->
+            <div id="order-details-modal" class="modal fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center p-4 hidden">
+                <div class="bg-white rounded-lg shadow-xl overflow-y-auto max-h-[90vh] w-full max-w-2xl p-6">
+                    <div class="flex justify-between items-center mb-4 border-b pb-2">
+                        <h3 class="text-2xl font-bold text-gray-800">Chi tiết Đơn hàng <span id="order-id"></span></h3>
+                        <button class="text-gray-500 hover:text-gray-700" onclick="hideModal('order-details-modal')"><i class="fas fa-times fa-lg"></i></button>
+                    </div>
+                    <div id="order-details-content">
+                        <!-- Content will be populated by JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Doanh thu -->
+            <div id="revenue-modal" class="modal fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center p-4 hidden">
+                <div class="bg-white rounded-lg shadow-xl overflow-y-auto max-h-[90vh] w-full max-w-2xl p-6">
+                    <div class="flex justify-between items-center mb-4 border-b pb-2">
+                        <h3 class="text-2xl font-bold text-gray-800">Doanh thu theo Sản phẩm</h3>
+                        <button class="text-gray-500 hover:text-gray-700" onclick="hideModal('revenue-modal')"><i class="fas fa-times fa-lg"></i></button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full text-left table-auto">
+                            <thead>
+                                <tr class="bg-gray-100 text-gray-600 uppercase text-sm leading-normal">
+                                    <th class="py-3 px-6 text-left">Sản phẩm</th>
+                                    <th class="py-3 px-6 text-center">Tổng số lượng đã bán</th>
+                                    <th class="py-3 px-6 text-center">Tổng doanh thu</th>
+                                </tr>
+                            </thead>
+                            <tbody id="revenue-table-body" class="text-gray-600 text-sm font-light">
+                                <!-- Data sẽ được thêm bằng JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Khách hàng -->
+            <div id="customers-modal" class="modal fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center p-4 hidden">
+                <div class="bg-white rounded-lg shadow-xl overflow-y-auto max-h-[90vh] w-full max-w-4xl p-6">
+                    <div class="flex justify-between items-center mb-4 border-b pb-2">
+                        <h3 class="text-2xl font-bold text-gray-800">Tất cả Khách hàng</h3>
+                        <button class="text-gray-500 hover:text-gray-700" onclick="hideModal('customers-modal')"><i class="fas fa-times fa-lg"></i></button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full text-left table-auto">
+                            <thead>
+                                <tr class="bg-gray-100 text-gray-600 uppercase text-sm leading-normal">
+                                    <th class="py-3 px-6 text-left">Khách hàng</th>
+                                    <th class="py-3 px-6 text-center">Email</th>
+                                    <th class="py-3 px-6 text-center">Tổng đơn hàng</th>
+                                    <th class="py-3 px-6 text-center">Tổng chi tiêu</th>
+                                    <th class="py-3 px-6 text-center">Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody id="all-customers-table-body" class="text-gray-600 text-sm font-light">
+                                <!-- Data sẽ được thêm bằng JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal chi tiết khách hàng -->
+            <div id="customer-details-modal" class="modal fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center p-4 hidden">
+                <div class="bg-white rounded-lg shadow-xl overflow-y-auto max-h-[90vh] w-full max-w-2xl p-6">
+                    <div class="flex justify-between items-center mb-4 border-b pb-2">
+                        <h3 class="text-2xl font-bold text-gray-800">Chi tiết Khách hàng</h3>
+                        <button class="text-gray-500 hover:text-gray-700" onclick="hideModal('customer-details-modal')"><i class="fas fa-times fa-lg"></i></button>
+                    </div>
+                    <div id="customer-details-content">
+                        <!-- Content will be populated by JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal chi tiết sách -->
+            <div id="book-details-modal" class="modal fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center p-4 hidden">
+                <div class="bg-white rounded-lg shadow-xl overflow-y-auto max-h-[90vh] w-full max-w-3xl p-6">
+                    <div class="flex justify-between items-center mb-4 border-b pb-2">
+                        <h3 class="text-2xl font-bold text-gray-800">Chi tiết Sách</h3>
+                        <button class="text-gray-500 hover:text-gray-700" onclick="hideModal('book-details-modal')"><i class="fas fa-times fa-lg"></i></button>
+                    </div>
+                    <div id="book-details-content-modal" class="flex flex-col md:flex-row md:space-x-8">
+                        <!-- Content will be populated by JS -->
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+
+    <script>
+        // Mock data cho sách
+        let booksData = [
+            { id: 1, title: 'Đắc Nhân Tâm', author: 'Dale Carnegie', category: 'Kinh doanh', price: '125,000', stock: 50, status: 'Còn hàng', imageUrl: 'https://placehold.co/200x300/d1d5db/4b5563?text=Sách+1', description: 'Một trong những cuốn sách kinh điển nhất về nghệ thuật ứng xử, giao tiếp và thuyết phục người khác. Cuốn sách giúp bạn thành công hơn trong công việc và cuộc sống.' },
+            { id: 2, title: 'Nhà Giả Kim', author: 'Paulo Coelho', category: 'Văn học', price: '95,000', stock: 12, status: 'Còn hàng', imageUrl: 'https://placehold.co/200x300/d1d5db/4b5563?text=Sách+2', description: 'Một tiểu thuyết đầy cảm hứng về hành trình đi tìm kho báu của chàng chăn cừu Santiago, qua đó khám phá ý nghĩa của cuộc đời và số phận.' },
+            { id: 3, title: 'Sapiens: Lược Sử Loài Người', author: 'Yuval Noah Harari', category: 'Khoa học', price: '180,000', stock: 0, status: 'Hết hàng', imageUrl: 'https://placehold.co/200x300/d1d5db/4b5563?text=Sách+3', description: 'Một cuốn sách đồ sộ, đưa ra cái nhìn tổng quan về lịch sử phát triển của loài người, từ buổi đầu tiên cho đến hiện tại và tương lai.' },
+            { id: 4, title: 'Tôi Tự Học', author: 'Nguyễn Duy Cần', category: 'Văn học', price: '85,000', stock: 25, status: 'Còn hàng', imageUrl: 'https://placehold.co/200x300/d1d5db/4b5563?text=Sách+4', description: 'Cuốn sách truyền cảm hứng về giá trị của việc tự học, tự rèn luyện bản thân, đưa ra những lời khuyên hữu ích để mỗi người có thể trở thành phiên bản tốt hơn của chính mình.' },
+            { id: 5, title: 'Muôn Kiếp Nhân Sinh', author: 'Nguyên Phong', category: 'Văn học', price: '150,000', stock: 5, status: 'Còn hàng', imageUrl: 'https://placehold.co/200x300/d1d5db/4b5563?text=Sách+5', description: 'Bộ sách kể về những trải nghiệm luân hồi và những bài học tâm linh sâu sắc qua nhiều kiếp sống.' },
+        ];
+        
+        // Mock data cho khách hàng
+        const customersData = [
+            { id: 1, name: 'Nguyễn Văn A', email: 'vana@example.com', phone: '0901234567', address: '123 Đường ABC, Quận 1, TP. HCM', totalOrders: 15, totalSpent: '5,200,000' },
+            { id: 2, name: 'Trần Thị B', email: 'thib@example.com', phone: '0907654321', address: '456 Đường XYZ, Quận 2, TP. HCM', totalOrders: 8, totalSpent: '2,500,000' },
+            { id: 3, name: 'Lê Văn C', email: 'vanc@example.com', phone: '0902345678', address: '789 Đường DEF, Quận 3, TP. HCM', totalOrders: 2, totalSpent: '350,000' },
+            { id: 4, name: 'Phạm Thị D', email: 'thid@example.com', phone: '0908765432', address: '101 Đường GHI, Quận 4, TP. HCM', totalOrders: 20, totalSpent: '12,800,000' },
+        ];
+
+        // Mock data cho nhân viên
+        const employeesData = [
+            { id: 1, name: 'Lê Văn Khải', email: 'khai.lv@example.com', role: 'Quản lý', status: 'Hoạt động' },
+            { id: 2, name: 'Hoàng Thị Thùy', email: 'thuy.ht@example.com', role: 'Nhân viên', status: 'Hoạt động' },
+            { id: 3, name: 'Trần Minh Đức', email: 'duc.tm@example.com', role: 'Nhân viên', status: 'Khóa' },
+        ];
+
+        // Mock data cho danh mục
+        let categoriesData = [
+            { id: 1, name: 'Văn học', bookCount: 30 },
+            { id: 2, name: 'Khoa học', bookCount: 15 },
+            { id: 3, name: 'Kinh doanh', bookCount: 20 },
+            { id: 4, name: 'Lịch sử', bookCount: 10 },
+        ];
+
+        // Mock data cho khuyến mãi
+        let promotionsData = [
+            { id: 1, code: 'HE2024', discount: '20% cho đơn hàng > 500k', expiry: '31/12/2024', status: 'Còn hiệu lực' },
+            { id: 2, code: 'FREESHIP', discount: 'Miễn phí vận chuyển', expiry: '30/11/2024', status: 'Còn hiệu lực' },
+            { id: 3, code: 'NEWUSER10', discount: '10% cho khách hàng mới', expiry: '31/12/2023', status: 'Hết hạn' },
+        ];
+        
+        // Mock data cho đơn hàng
+        const ordersData = [
+            { id: 'DH001', customerId: 1, customerName: 'Nguyễn Văn A', total: '250,000', date: '20/10/2023', status: 'Đã giao', items: [{ productId: 1, productName: 'Đắc Nhân Tâm', quantity: 1, price: '125,000' }, { productId: 2, productName: 'Nhà Giả Kim', quantity: 1, price: '95,000' }] },
+            { id: 'DH002', customerId: 2, customerName: 'Trần Thị B', total: '150,000', date: '19/10/2023', status: 'Đang vận chuyển', items: [{ productId: 5, productName: 'Muôn Kiếp Nhân Sinh', quantity: 1, price: '150,000' }] },
+            { id: 'DH003', customerId: 3, customerName: 'Lê Văn C', total: '350,000', date: '18/10/2023', status: 'Đã hủy', items: [{ productId: 4, productName: 'Tôi Tự Học', quantity: 2, price: '85,000' }] },
+            { id: 'DH004', customerId: 4, customerName: 'Phạm Thị D', total: '120,000', date: '17/10/2023', status: 'Đã giao', items: [{ productId: 1, productName: 'Đắc Nhân Tâm', quantity: 1, price: '125,000' }] },
+        ];
+
+
+        // DOM Elements
+        const sidebar = document.getElementById('sidebar');
+        const mainContent = document.getElementById('main-content');
+        const openSidebarBtn = document.getElementById('open-sidebar-btn');
+        const closeSidebarBtn = document.getElementById('close-sidebar-btn');
+        const viewContainer = document.getElementById('view-container');
+        const menuItems = document.querySelectorAll('.menu-item');
+        const searchInput = document.getElementById('searchInput');
+        const categoryFilter = document.getElementById('categoryFilter');
+        const statusFilter = document.getElementById('statusFilter');
+        const searchBtn = document.getElementById('searchBtn');
+        const booksTableBody = document.getElementById('books-table-body');
+        const customersTableBody = document.getElementById('customers-table-body');
+        const employeesTableBody = document.getElementById('employees-table-body');
+        const categoriesTableBody = document.getElementById('categories-table-body');
+        const promotionsTableBody = document.getElementById('promotions-table-body');
+        const alertContainer = document.getElementById('alert-message-container');
+        const lowStockItems = document.getElementById('low-stock-items');
+        const lowStockCount = document.getElementById('low-stock-count');
+        
+        const booksListSection = document.getElementById('books-list-section');
+        const addBookFormSection = document.getElementById('add-book-form-section');
+        const addBookForm = document.getElementById('add-book-form');
+        const employeesListSection = document.getElementById('employees-list-section');
+        const addEmployeeFormSection = document.getElementById('add-employee-form-section');
+        const addEmployeeForm = document.getElementById('add-employee-form');
+        
+        const categoriesListSection = document.getElementById('categories-list-section');
+        const addCategoryFormSection = document.getElementById('add-category-form-section');
+        const addCategoryForm = document.getElementById('add-category-form');
+        const newBookCategoryDropdown = document.getElementById('new-book-category');
+
+        const promotionsListSection = document.getElementById('promotions-list-section');
+        const addPromotionFormSection = document.getElementById('add-promotion-form-section');
+        const addPromotionForm = document.getElementById('add-promotion-form');
+        const promoTextOutputContainer = document.getElementById('promo-text-output-container');
+        const promoTextOutput = document.getElementById('promo-text-output');
+        const generateDescriptionBtn = document.getElementById('generate-description-btn');
+        const newBookTitle = document.getElementById('new-book-title');
+        const newBookAuthor = document.getElementById('new-book-author');
+        const newBookDescription = document.getElementById('new-book-description');
+        const generatePromoTextBtn = document.getElementById('generate-promo-text-btn');
+        const newPromoCode = document.getElementById('new-promo-code');
+        const newPromoDiscount = document.getElementById('new-promo-discount');
+        const newPromoExpiry = document.getElementById('new-promo-expiry');
+
+
+        // Function để hiển thị thông báo
+        function showAlert(message, type = 'success') {
+            const alertEl = document.createElement('div');
+            let bgColor = 'bg-green-500';
+            let icon = 'fas fa-check-circle';
+            if (type === 'error') {
+                bgColor = 'bg-red-500';
+                icon = 'fas fa-times-circle';
+            } else if (type === 'info') {
+                bgColor = 'bg-blue-500';
+                icon = 'fas fa-info-circle';
+            }
+            alertEl.className = `alert text-white p-4 rounded-lg shadow-lg mb-2 flex items-center ${bgColor}`;
+            alertEl.innerHTML = `
+                <i class="text-xl mr-3 ${icon}"></i>
+                <span>${message}</span>
+            `;
+            alertContainer.appendChild(alertEl);
+
+            setTimeout(() => {
+                alertEl.remove();
+            }, 3000);
+        }
+
+        // Chức năng chuyển đổi view
+        function showView(viewId) {
+            document.querySelectorAll('.view').forEach(view => {
+                view.classList.add('hidden');
+            });
+            document.getElementById(viewId).classList.remove('hidden');
+
+            // Cập nhật trạng thái active của menu
+            menuItems.forEach(item => {
+                item.classList.remove('bg-blue-100', 'text-blue-600', 'font-semibold');
+                item.classList.add('text-gray-700');
+            });
+            const activeItem = document.querySelector(`.menu-item[data-view="${viewId.replace('-view', '')}"]`);
+            if (activeItem) {
+                 activeItem.classList.add('bg-blue-100', 'text-blue-600', 'font-semibold');
+            }
+            // Ẩn form thêm mới khi chuyển view
+            if(viewId !== 'books-view') {
+                 addBookFormSection.classList.add('hidden');
+                 booksListSection.classList.remove('hidden');
+            }
+            if(viewId !== 'employees-view') {
+                 addEmployeeFormSection.classList.add('hidden');
+                 employeesListSection.classList.remove('hidden');
+            }
+            if(viewId !== 'categories-view') {
+                addCategoryFormSection.classList.add('hidden');
+                categoriesListSection.classList.remove('hidden');
+            }
+            if(viewId !== 'promotions-view') {
+                addPromotionFormSection.classList.add('hidden');
+                promotionsListSection.classList.remove('hidden');
+            }
+        }
+        
+        // Render dữ liệu sách vào bảng
+        function renderBooks(books) {
+            booksTableBody.innerHTML = ''; // Xóa dữ liệu cũ
+            if (books.length === 0) {
+                booksTableBody.innerHTML = `<tr><td colspan="5" class="py-4 text-center text-gray-500">Không tìm thấy sách nào.</td></tr>`;
+                return;
+            }
+            books.forEach(book => {
+                const row = document.createElement('tr');
+                row.className = 'border-b border-gray-200 hover:bg-gray-50';
+                const statusColor = book.status === 'Còn hàng' ? 'text-green-500' : 'text-red-500';
+                const actions = `
+                    <button class="text-blue-500 hover:text-blue-700 transition-colors duration-200 mr-3" onclick="showBookDetails(${book.id})">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    <button class="text-red-500 hover:text-red-700 transition-colors duration-200" onclick="deleteBook(${book.id})">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                `;
+                row.innerHTML = `
+                    <td class="py-3 px-6 whitespace-nowrap">
+                        <div class="flex items-center">
+                            <img src="${book.imageUrl}" alt="${book.title}" class="w-10 h-16 rounded mr-3 object-cover">
+                            <div class="flex flex-col">
+                                <span class="font-semibold text-gray-800">${book.title}</span>
+                                <span class="text-xs text-gray-500">${book.author}</span>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="py-3 px-6 text-center">${book.price} VNĐ</td>
+                    <td class="py-3 px-6 text-center">${book.stock}</td>
+                    <td class="py-3 px-6 text-center">
+                        <span class="font-semibold ${statusColor}">${book.status}</span>
+                    </td>
+                    <td class="py-3 px-6 text-center">
+                        <div class="flex item-center justify-center">
+                            ${actions}
+                        </div>
+                    </td>
+                `;
+                booksTableBody.appendChild(row);
+            });
+        }
+        
+        // Render dữ liệu khách hàng vào bảng
+        function renderCustomers(customers) {
+            customersTableBody.innerHTML = '';
+            customers.forEach(customer => {
+                const row = document.createElement('tr');
+                row.className = 'border-b border-gray-200 hover:bg-gray-50';
+                const actions = `
+                    <button class="text-blue-500 hover:text-blue-700 transition-colors duration-200" onclick="showCustomerDetails(${customer.id})">
+                        <i class="fas fa-user-circle"></i>
+                    </button>
+                `;
+                row.innerHTML = `
+                    <td class="py-3 px-6 whitespace-nowrap">${customer.name}</td>
+                    <td class="py-3 px-6 text-center">${customer.email}</td>
+                    <td class="py-3 px-6 text-center">${customer.totalOrders}</td>
+                    <td class="py-3 px-6 text-center">${customer.totalSpent} VNĐ</td>
+                    <td class="py-3 px-6 text-center">
+                        <div class="flex item-center justify-center">
+                            ${actions}
+                        </div>
+                    </td>
+                `;
+                customersTableBody.appendChild(row);
+            });
+        }
+
+        // Render dữ liệu nhân viên vào bảng
+        function renderEmployees(employees) {
+            employeesTableBody.innerHTML = '';
+            employees.forEach(employee => {
+                const row = document.createElement('tr');
+                row.className = 'border-b border-gray-200 hover:bg-gray-50';
+                const statusColor = employee.status === 'Hoạt động' ? 'text-green-500' : 'text-red-500';
+                const actions = `
+                    <button class="text-blue-500 hover:text-blue-700 transition-colors duration-200 mr-3" onclick="showAlert('Đang sửa tài khoản của ${employee.name}', 'info')">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="text-red-500 hover:text-red-700 transition-colors duration-200" onclick="showAlert('Đã hủy tài khoản của ${employee.name}', 'success')">
+                        <i class="fas fa-user-slash"></i>
+                    </button>
+                `;
+                row.innerHTML = `
+                    <td class="py-3 px-6 whitespace-nowrap">${employee.name}</td>
+                    <td class="py-3 px-6 text-center">${employee.email}</td>
+                    <td class="py-3 px-6 text-center">${employee.role}</td>
+                    <td class="py-3 px-6 text-center">
+                        <span class="font-semibold ${statusColor}">${employee.status}</span>
+                    </td>
+                    <td class="py-3 px-6 text-center">
+                        <div class="flex item-center justify-center">
+                            ${actions}
+                        </div>
+                    </td>
+                `;
+                employeesTableBody.appendChild(row);
+            });
+        }
+
+        // Render dữ liệu danh mục vào bảng và dropdown
+        function renderCategories(categories) {
+            categoriesTableBody.innerHTML = '';
+            categoryFilter.innerHTML = '<option value="">Tất cả Thể loại</option>'; // Reset dropdown
+            newBookCategoryDropdown.innerHTML = ''; // Reset dropdown
+            
+            categories.forEach(category => {
+                const row = document.createElement('tr');
+                row.className = 'border-b border-gray-200 hover:bg-gray-50';
+                const actions = `
+                    <button class="text-blue-500 hover:text-blue-700 transition-colors duration-200 mr-3" onclick="showAlert('Đang sửa danh mục ${category.name}', 'info')">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="text-red-500 hover:text-red-700 transition-colors duration-200" onclick="showAlert('Đã xóa danh mục ${category.name}', 'success')">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                `;
+                row.innerHTML = `
+                    <td class="py-3 px-6 whitespace-nowrap">${category.name}</td>
+                    <td class="py-3 px-6 text-center">${category.bookCount}</td>
+                    <td class="py-3 px-6 text-center">
+                        <div class="flex item-center justify-center">
+                            ${actions}
+                        </div>
+                    </td>
+                `;
+                categoriesTableBody.appendChild(row);
+
+                // Add to dropdown filter
+                const optionFilter = document.createElement('option');
+                optionFilter.value = category.name;
+                optionFilter.textContent = category.name;
+                categoryFilter.appendChild(optionFilter);
+
+                // Add to new book category dropdown
+                const optionNewBook = document.createElement('option');
+                optionNewBook.value = category.name;
+                optionNewBook.textContent = category.name;
+                newBookCategoryDropdown.appendChild(optionNewBook);
+            });
+        }
+        
+        // Render dữ liệu khuyến mãi vào bảng
+        function renderPromotions(promotions) {
+            promotionsTableBody.innerHTML = '';
+            promotions.forEach(promo => {
+                const row = document.createElement('tr');
+                row.className = 'border-b border-gray-200 hover:bg-gray-50';
+                const statusColor = promo.status === 'Còn hiệu lực' ? 'text-green-500' : 'text-red-500';
+                const actions = `
+                    <button class="text-blue-500 hover:text-blue-700 transition-colors duration-200 mr-3" onclick="showAlert('Đang sửa mã ${promo.code}', 'info')">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="text-red-500 hover:text-red-700 transition-colors duration-200" onclick="deletePromotion(${promo.id})">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                `;
+                row.innerHTML = `
+                    <td class="py-3 px-6 whitespace-nowrap font-semibold">${promo.code}</td>
+                    <td class="py-3 px-6 text-center">${promo.discount}</td>
+                    <td class="py-3 px-6 text-center">${promo.expiry}</td>
+                    <td class="py-3 px-6 text-center">
+                        <span class="font-semibold ${statusColor}">${promo.status}</span>
+                    </td>
+                    <td class="py-3 px-6 text-center">
+                        <div class="flex item-center justify-center">
+                            ${actions}
+                        </div>
+                    </td>
+                `;
+                promotionsTableBody.appendChild(row);
+            });
+        }
+
+        // Render các mục tồn kho thấp
+        function renderLowStockItems() {
+            lowStockItems.innerHTML = '';
+            const lowStockThreshold = 10;
+            const filteredBooks = booksData.filter(book => book.stock > 0 && book.stock <= lowStockThreshold);
+            lowStockCount.textContent = filteredBooks.length;
+
+            if (filteredBooks.length === 0) {
+                lowStockItems.innerHTML = '<p class="text-gray-500 text-center">Không có sách nào sắp hết hàng.</p>';
+                return;
+            }
+
+            filteredBooks.forEach(book => {
+                const itemEl = document.createElement('div');
+                itemEl.className = 'flex items-center justify-between p-3 bg-gray-50 rounded-lg';
+                itemEl.innerHTML = `
+                    <div class="flex items-center">
+                        <i class="fas fa-exclamation-triangle text-yellow-500 mr-3"></i>
+                        <span class="font-medium text-gray-700">${book.title}</span>
+                    </div>
+                    <span class="text-sm font-semibold text-red-600">Còn ${book.stock}</span>
+                `;
+                lowStockItems.appendChild(itemEl);
+            });
+        }
+        
+        // Hiển thị modal
+        function showModal(modalId) {
+            const modal = document.getElementById(modalId);
+            modal.classList.remove('hidden');
+            document.body.classList.add('overflow-hidden');
+        }
+
+        // Ẩn modal
+        function hideModal(modalId) {
+            const modal = document.getElementById(modalId);
+            modal.classList.add('hidden');
+            document.body.classList.remove('overflow-hidden');
+        }
+
+        // Render bảng đơn hàng
+        function renderOrders(orders) {
+            const ordersTableBody = document.getElementById('orders-table-body');
+            ordersTableBody.innerHTML = '';
+            if (orders.length === 0) {
+                ordersTableBody.innerHTML = `<tr><td colspan="6" class="py-4 text-center text-gray-500">Không có đơn hàng nào.</td></tr>`;
+                return;
+            }
+            orders.forEach(order => {
+                const row = document.createElement('tr');
+                row.className = 'border-b border-gray-200 hover:bg-gray-50';
+                const statusColor = order.status === 'Đã giao' ? 'text-green-500' : (order.status === 'Đang vận chuyển' ? 'text-blue-500' : 'text-red-500');
+                row.innerHTML = `
+                    <td class="py-3 px-6 whitespace-nowrap font-semibold">${order.id}</td>
+                    <td class="py-3 px-6 text-center">${order.customerName}</td>
+                    <td class="py-3 px-6 text-center">${order.total} VNĐ</td>
+                    <td class="py-3 px-6 text-center">${order.date}</td>
+                    <td class="py-3 px-6 text-center"><span class="font-semibold ${statusColor}">${order.status}</span></td>
+                    <td class="py-3 px-6 text-center">
+                        <button class="text-blue-500 hover:text-blue-700 transition-colors duration-200" onclick="showOrderDetails('${order.id}')">
+                            <i class="fas fa-info-circle"></i>
+                        </button>
+                    </td>
+                `;
+                ordersTableBody.appendChild(row);
+            });
+        }
+        
+        // Hiển thị chi tiết đơn hàng
+        function showOrderDetails(orderId) {
+            const order = ordersData.find(o => o.id === orderId);
+            if (!order) return;
+
+            const orderDetailsContent = document.getElementById('order-details-content');
+            orderDetailsContent.innerHTML = `
+                <div class="mb-4">
+                    <p class="font-semibold text-gray-700">Khách hàng: <span class="font-normal">${order.customerName}</span></p>
+                    <p class="font-semibold text-gray-700">Ngày đặt: <span class="font-normal">${order.date}</span></p>
+                    <p class="font-semibold text-gray-700">Tổng tiền: <span class="font-normal text-green-600">${order.total} VNĐ</span></p>
+                    <p class="font-semibold text-gray-700">Trạng thái: <span class="font-normal">${order.status}</span></p>
+                </div>
+                <h4 class="text-lg font-bold text-gray-800 mb-2">Danh sách Sản phẩm:</h4>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full text-left table-auto">
+                        <thead>
+                            <tr class="bg-gray-100 text-gray-600 uppercase text-sm leading-normal">
+                                <th class="py-2 px-4 text-left">Sản phẩm</th>
+                                <th class="py-2 px-4 text-center">Số lượng</th>
+                                <th class="py-2 px-4 text-center">Giá</th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-gray-600 text-sm font-light">
+                            ${order.items.map(item => `
+                                <tr class="border-b border-gray-200">
+                                    <td class="py-2 px-4">${item.productName}</td>
+                                    <td class="py-2 px-4 text-center">${item.quantity}</td>
+                                    <td class="py-2 px-4 text-center">${item.price} VNĐ</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+            document.getElementById('order-id').textContent = orderId;
+            showModal('order-details-modal');
+        }
+
+        // Render bảng doanh thu theo sản phẩm
+        function renderRevenueByProduct() {
+            const revenueTableBody = document.getElementById('revenue-table-body');
+            revenueTableBody.innerHTML = '';
+            
+            const productRevenue = {};
+            ordersData.forEach(order => {
+                order.items.forEach(item => {
+                    const price = parseFloat(item.price.replace(/,/g, ''));
+                    if (!productRevenue[item.productName]) {
+                        productRevenue[item.productName] = { quantity: 0, revenue: 0 };
+                    }
+                    productRevenue[item.productName].quantity += item.quantity;
+                    productRevenue[item.productName].revenue += price * item.quantity;
+                });
+            });
+
+            for (const product in productRevenue) {
+                const row = document.createElement('tr');
+                row.className = 'border-b border-gray-200 hover:bg-gray-50';
+                row.innerHTML = `
+                    <td class="py-3 px-6 whitespace-nowrap font-semibold">${product}</td>
+                    <td class="py-3 px-6 text-center">${productRevenue[product].quantity}</td>
+                    <td class="py-3 px-6 text-center">${productRevenue[product].revenue.toLocaleString('vi-VN')} VNĐ</td>
+                `;
+                revenueTableBody.appendChild(row);
+            }
+        }
+        
+        // Render bảng tất cả khách hàng
+        function renderAllCustomers(customers) {
+            const allCustomersTableBody = document.getElementById('all-customers-table-body');
+            allCustomersTableBody.innerHTML = '';
+            customers.forEach(customer => {
+                const row = document.createElement('tr');
+                row.className = 'border-b border-gray-200 hover:bg-gray-50';
+                row.innerHTML = `
+                    <td class="py-3 px-6 whitespace-nowrap">${customer.name}</td>
+                    <td class="py-3 px-6 text-center">${customer.email}</td>
+                    <td class="py-3 px-6 text-center">${customer.totalOrders}</td>
+                    <td class="py-3 px-6 text-center">${customer.totalSpent} VNĐ</td>
+                    <td class="py-3 px-6 text-center">
+                        <div class="flex item-center justify-center">
+                            <button class="text-blue-500 hover:text-blue-700 transition-colors duration-200" onclick="showCustomerDetails(${customer.id})">
+                                <i class="fas fa-user-circle"></i>
+                            </button>
+                        </div>
+                    </td>
+                `;
+                allCustomersTableBody.appendChild(row);
+            });
+        }
+
+        // Hiển thị chi tiết khách hàng
+        function showCustomerDetails(customerId) {
+            const customer = customersData.find(c => c.id === customerId);
+            if (!customer) return;
+            
+            const customerDetailsContent = document.getElementById('customer-details-content');
+            customerDetailsContent.innerHTML = `
+                <div class="mb-4 space-y-2">
+                    <p><span class="font-semibold text-gray-700">Tên:</span> ${customer.name}</p>
+                    <p><span class="font-semibold text-gray-700">Email:</span> ${customer.email}</p>
+                    <p><span class="font-semibold text-gray-700">Số điện thoại:</span> ${customer.phone}</p>
+                    <p><span class="font-semibold text-gray-700">Địa chỉ:</span> ${customer.address}</p>
+                    <p><span class="font-semibold text-gray-700">Tổng đơn hàng:</span> ${customer.totalOrders}</p>
+                    <p><span class="font-semibold text-gray-700">Tổng chi tiêu:</span> ${customer.totalSpent} VNĐ</p>
+                </div>
+            `;
+            showModal('customer-details-modal');
+        }
+
+        // Hiển thị chi tiết sách
+        function showBookDetails(bookId) {
+            const book = booksData.find(b => b.id === bookId);
+            if (!book) return;
+
+            const bookDetailsContentModal = document.getElementById('book-details-content-modal');
+            bookDetailsContentModal.innerHTML = `
+                <div class="flex-shrink-0 w-full md:w-1/3 mb-4 md:mb-0">
+                    <img src="${book.imageUrl}" alt="${book.title}" class="w-full h-auto rounded-lg shadow-md">
+                </div>
+                <div class="flex-grow">
+                    <h4 class="text-2xl font-bold text-gray-800 mb-2">${book.title}</h4>
+                    <p class="text-gray-600 mb-4"><span class="font-semibold">Tác giả:</span> ${book.author}</p>
+                    <p class="text-gray-600 mb-4"><span class="font-semibold">Thể loại:</span> ${book.category}</p>
+                    <p class="text-gray-600 mb-4"><span class="font-semibold">Giá:</span> <span class="text-green-600 font-bold">${book.price} VNĐ</span></p>
+                    <p class="text-gray-600 mb-4"><span class="font-semibold">Tồn kho:</span> ${book.stock}</p>
+                    <p class="text-gray-600"><span class="font-semibold">Mô tả:</span></p>
+                    <p class="text-gray-500 text-sm leading-relaxed">${book.description}</p>
+                </div>
+            `;
+            showModal('book-details-modal');
+        }
+
+        // Xóa sách
+        function deleteBook(bookId) {
+            if (confirm('Bạn có chắc chắn muốn xóa cuốn sách này?')) {
+                const bookIndex = booksData.findIndex(b => b.id === bookId);
+                if (bookIndex > -1) {
+                    const deletedBook = booksData.splice(bookIndex, 1)[0];
+                    showAlert(`Đã xóa sách "${deletedBook.title}"`, 'success');
+                    filterBooks(); // Render lại bảng sách sau khi xóa
+                }
+            }
+        }
+        
+        // Chức năng tìm kiếm và lọc
+        function filterBooks() {
+            const searchTerm = searchInput.value.toLowerCase();
+            const selectedCategory = categoryFilter.value;
+            const selectedStatus = statusFilter.value;
+            
+            const filteredBooks = booksData.filter(book => {
+                const matchesSearch = book.title.toLowerCase().includes(searchTerm) || book.author.toLowerCase().includes(searchTerm);
+                const matchesCategory = selectedCategory === '' || book.category === selectedCategory;
+                const matchesStatus = selectedStatus === '' || book.status === selectedStatus;
+                return matchesSearch && matchesCategory && matchesStatus;
+            });
+            
+            renderBooks(filteredBooks);
+        }
+
+        // Chức năng hiển thị form Thêm Sách
+        function showAddBookForm() {
+            booksListSection.classList.add('hidden');
+            addBookFormSection.classList.remove('hidden');
+        }
+
+        // Chức năng hiển thị danh sách Sách
+        function showBooksList() {
+            addBookFormSection.classList.add('hidden');
+            booksListSection.classList.remove('hidden');
+        }
+
+        // Chức năng hiển thị form Thêm Nhân viên
+        function showAddEmployeeForm() {
+            employeesListSection.classList.add('hidden');
+            addEmployeeFormSection.classList.remove('hidden');
+        }
+
+        // Chức năng hiển thị danh sách Nhân viên
+        function showEmployeesList() {
+            addEmployeeFormSection.classList.add('hidden');
+            employeesListSection.classList.remove('hidden');
+        }
+
+        // Chức năng hiển thị form Thêm Danh mục
+        function showAddCategoryForm() {
+            categoriesListSection.classList.add('hidden');
+            addCategoryFormSection.classList.remove('hidden');
+        }
+
+        // Chức năng hiển thị danh sách Danh mục
+        function showCategoriesList() {
+            addCategoryFormSection.classList.add('hidden');
+            categoriesListSection.classList.remove('hidden');
+        }
+
+        // Chức năng hiển thị form Thêm Mã Giảm giá
+        function showAddPromotionForm() {
+            promotionsListSection.classList.add('hidden');
+            addPromotionFormSection.classList.remove('hidden');
+        }
+
+        // Chức năng hiển thị danh sách Mã Giảm giá
+        function showPromotionsList() {
+            addPromotionFormSection.classList.add('hidden');
+            promotionsListSection.classList.remove('hidden');
+            renderPromotions(promotionsData); // Render lại danh sách
+        }
+
+        // Xóa mã giảm giá
+        function deletePromotion(promoId) {
+            if (confirm('Bạn có chắc chắn muốn xóa mã giảm giá này?')) {
+                const promoIndex = promotionsData.findIndex(p => p.id === promoId);
+                if (promoIndex > -1) {
+                    const deletedPromo = promotionsData.splice(promoIndex, 1)[0];
+                    showAlert(`Đã xóa mã giảm giá "${deletedPromo.code}"`, 'success');
+                    renderPromotions(promotionsData); // Render lại bảng
+                }
+            }
+        }
+        
+        // Chức năng sao chép nội dung quảng cáo
+        function copyPromoText() {
+            promoTextOutput.select();
+            document.execCommand('copy');
+            showAlert('Đã sao chép nội dung quảng cáo!', 'info');
+        }
+
+        // Tích hợp Gemini API
+        async function callGeminiAPI(prompt) {
+            const apiKey = ""; // API key sẽ được cung cấp tự động
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+
+            const payload = {
+                contents: [{ parts: [{ text: prompt }] }],
+            };
+
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const result = await response.json();
+                if (result.candidates && result.candidates.length > 0) {
+                    return result.candidates[0].content.parts[0].text;
+                } else {
+                    return "Không thể tạo nội dung. Vui lòng thử lại.";
+                }
+            } catch (error) {
+                console.error("Lỗi khi gọi Gemini API:", error);
+                return "Đã xảy ra lỗi. Vui lòng kiểm tra console log.";
+            }
+        }
+
+        // Xử lý sự kiện tạo mô tả sách
+        generateDescriptionBtn.addEventListener('click', async () => {
+            const title = newBookTitle.value.trim();
+            const author = newBookAuthor.value.trim();
+            
+            if (!title || !author) {
+                showAlert("Vui lòng nhập tên sách và tác giả trước.", "error");
+                return;
+            }
+
+            generateDescriptionBtn.textContent = 'Đang tạo...';
+            generateDescriptionBtn.disabled = true;
+
+            const prompt = `Hãy viết một đoạn mô tả hấp dẫn cho cuốn sách có tên '${title}' của tác giả '${author}'. Mô tả này nên ngắn gọn, thu hút, và nêu bật được nội dung chính của sách.`;
+            const description = await callGeminiAPI(prompt);
+            
+            newBookDescription.value = description.trim();
+            generateDescriptionBtn.textContent = 'Tạo Mô Tả ✨';
+            generateDescriptionBtn.disabled = false;
+        });
+
+        // Xử lý sự kiện tạo nội dung quảng cáo
+        generatePromoTextBtn.addEventListener('click', async () => {
+            const code = newPromoCode.value.trim();
+            const discount = newPromoDiscount.value.trim();
+            const expiry = newPromoExpiry.value.trim();
+            
+            if (!code || !discount || !expiry) {
+                showAlert("Vui lòng nhập đủ Mã, Giá trị giảm và Hạn sử dụng.", "error");
+                return;
+            }
+
+            generatePromoTextBtn.textContent = 'Đang tạo...';
+            generatePromoTextBtn.disabled = true;
+            promoTextOutputContainer.classList.add('hidden');
+            
+            const prompt = `Hãy viết một đoạn nội dung ngắn gọn và hấp dẫn cho email quảng cáo để giới thiệu mã giảm giá '${code}' với ưu đãi '${discount}' cho đến ngày '${expiry}'.`;
+            const promoText = await callGeminiAPI(prompt);
+            
+            promoTextOutput.value = promoText.trim();
+            promoTextOutputContainer.classList.remove('hidden');
+            generatePromoTextBtn.textContent = 'Tạo Nội Dung Quảng Cáo ✨';
+            generatePromoTextBtn.disabled = false;
+        });
+
+
+        // Sự kiện
+        document.addEventListener('DOMContentLoaded', () => {
+            // Mặc định hiển thị view dashboard
+            showView('dashboard-view');
+            renderLowStockItems();
+            renderBooks(booksData);
+            renderCustomers(customersData);
+            renderEmployees(employeesData);
+            renderCategories(categoriesData);
+            renderPromotions(promotionsData);
+            
+            document.getElementById('total-orders-card').addEventListener('click', () => {
+                renderOrders(ordersData);
+                showModal('orders-modal');
+            });
+            
+            document.getElementById('total-revenue-card').addEventListener('click', () => {
+                renderRevenueByProduct();
+                showModal('revenue-modal');
+            });
+
+            document.getElementById('total-customers-card').addEventListener('click', () => {
+                renderAllCustomers(customersData);
+                showModal('customers-modal');
+            });
+        });
+
+        menuItems.forEach(item => {
+            item.addEventListener('click', (e) => {
+                e.preventDefault();
+                const view = e.currentTarget.dataset.view + '-view';
+                showView(view);
+                // Đóng sidebar trên mobile sau khi click
+                if (window.innerWidth <= 768) {
+                    sidebar.classList.remove('open');
+                }
+            });
+        });
+        
+        searchBtn.addEventListener('click', filterBooks);
+        searchInput.addEventListener('input', filterBooks);
+        categoryFilter.addEventListener('change', filterBooks);
+        statusFilter.addEventListener('change', filterBooks);
+
+        addBookForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+            const formData = new FormData(addBookForm);
+            const bookData = Object.fromEntries(formData.entries());
+            console.log('Dữ liệu sách đã gửi:', bookData);
+            showAlert(`Sách "${bookData.ten}" đã được thêm thành công!`, 'success');
+            addBookForm.reset();
+            showBooksList();
+        });
+
+        addEmployeeForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+            const formData = new FormData(addEmployeeForm);
+            const employeeData = Object.fromEntries(formData.entries());
+            console.log('Dữ liệu nhân viên đã gửi:', employeeData);
+            showAlert(`Nhân viên "${employeeData.ten}" đã được thêm thành công!`, 'success');
+            addEmployeeForm.reset();
+            showEmployeesList();
+        });
+
+        addCategoryForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+            const newCategoryName = document.getElementById('new-category-name').value;
+            if (newCategoryName) {
+                // Thêm danh mục mới vào dữ liệu giả
+                categoriesData.push({
+                    id: categoriesData.length + 1,
+                    name: newCategoryName,
+                    bookCount: 0
+                });
+                console.log('Danh mục mới đã được thêm:', newCategoryName);
+                showAlert(`Danh mục "${newCategoryName}" đã được thêm thành công!`, 'success');
+                addCategoryForm.reset();
+                renderCategories(categoriesData);
+                showCategoriesList();
+            }
+        });
+
+        addPromotionForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+            const newPromoCode = document.getElementById('new-promo-code').value;
+            const newPromoDiscount = document.getElementById('new-promo-discount').value;
+            const newPromoExpiry = document.getElementById('new-promo-expiry').value;
+            
+            if (newPromoCode && newPromoDiscount && newPromoExpiry) {
+                const newPromo = {
+                    id: promotionsData.length + 1,
+                    code: newPromoCode,
+                    discount: newPromoDiscount,
+                    expiry: newPromoExpiry,
+                    status: 'Còn hiệu lực'
+                };
+                promotionsData.push(newPromo);
+                console.log('Mã giảm giá mới đã được thêm:', newPromo);
+                showAlert(`Mã giảm giá "${newPromoCode}" đã được thêm thành công!`, 'success');
+                addPromotionForm.reset();
+                showPromotionsList();
+            }
+        });
+
+        // Chức năng đóng/mở sidebar trên mobile
+        openSidebarBtn.addEventListener('click', () => {
+            sidebar.classList.add('open');
+        });
+        closeSidebarBtn.addEventListener('click', () => {
+            sidebar.classList.remove('open');
+        });
+
+    </script>
+</body>
+</html>
